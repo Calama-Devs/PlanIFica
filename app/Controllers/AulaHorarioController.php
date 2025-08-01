@@ -3,24 +3,20 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
-
-use App\Models\CursosModel;
-use App\Models\VersoesModel;
-use App\Models\AmbientesModel;
 use App\Models\AulaHorarioModel;
-use App\Models\AulaHorarioAmbienteModel;
-
-
 
 class AulaHorarioController extends BaseController
 {
   public function verificarConflitosRotina() {
 
    $aulaHorarioModel = new AulaHorarioModel();
-   $aulas = $aulaHorarioModel
-   ->findAll();
-    // ->where('bypass !=', 1)
+    
+   
 
+   $aulas = $aulaHorarioModel
+   ->where('fixa =', null)
+   ->findAll();
+   
    $conflitos = [];
     //construindo o array de conflitos com o retorno das verificações
     foreach ($aulas as $aula) {

@@ -12,7 +12,7 @@ class AulaHorarioModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['aula_id', 'tempo_de_aula_id', 'versao_id'];
+    protected $allowedFields    = ['aula_id', 'tempo_de_aula_id', 'versao_id', 'fixa'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;

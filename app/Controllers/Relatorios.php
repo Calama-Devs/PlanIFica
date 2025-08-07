@@ -10,6 +10,7 @@ use App\Models\TurmasModel;
 use App\Models\ProfessorModel;
 use App\Models\GruposAmbientesModel;
 use App\Models\VersoesModel;
+use App\Models\AulasModel;
 
 class Relatorios extends BaseController
 {
@@ -19,6 +20,7 @@ class Relatorios extends BaseController
     protected $turmasModel;
     protected $professorModel;
     protected $gruposAmbientesModel;
+    protected $aulasModel;
     private $versao_nome;
 
     public function __construct()
@@ -29,6 +31,7 @@ class Relatorios extends BaseController
         $this->turmasModel = new TurmasModel();
         $this->professorModel = new ProfessorModel();
         $this->gruposAmbientesModel = new GruposAmbientesModel();
+        $this->aulasModel = new AulasModel();
 
         $this->versao_nome = '';
         $versaoModel = new VersoesModel();
@@ -115,7 +118,8 @@ class Relatorios extends BaseController
                 ambientes.nome as ambiente,
                 tempos_de_aula.dia_semana,
                 CONCAT(LPAD(tempos_de_aula.hora_inicio, 2, "0"), ":", LPAD(tempos_de_aula.minuto_inicio, 2, "0")) as hora_inicio,
-                aula_horario.destaque
+                aula_horario.destaque as horario_destaque,
+                aulas.destaque as aula_destaque
             ')
             ->join('aulas', 'aulas.id = aula_horario.aula_id')
             ->join('disciplinas', 'disciplinas.id = aulas.disciplina_id')
@@ -136,12 +140,21 @@ class Relatorios extends BaseController
             $builder->whereIn('turmas.id', $turmas);
         }
 
-        return $builder->orderBy('cursos.nome')
+        $resultados = $builder->orderBy('cursos.nome')
             ->orderBy('turmas.sigla')
             ->orderBy('tempos_de_aula.dia_semana')
             ->orderBy('tempos_de_aula.hora_inicio')
             ->orderBy('tempos_de_aula.minuto_inicio')
             ->findAll();
+
+        // Marcar como destaque se qualquer um dos campos for 1
+        foreach ($resultados as &$resultado) {
+            $resultado['destaque'] = ($resultado['horario_destaque'] == 1 || $resultado['aula_destaque'] == 1) ? 1 : 0;
+            unset($resultado['horario_destaque']);
+            unset($resultado['aula_destaque']);
+        }
+
+        return $resultados;
     }
 
     protected function filtrarProfessores()
@@ -157,7 +170,8 @@ class Relatorios extends BaseController
                 ambientes.nome as ambiente,
                 tempos_de_aula.dia_semana,
                 CONCAT(LPAD(tempos_de_aula.hora_inicio, 2, "0"), ":", LPAD(tempos_de_aula.minuto_inicio, 2, "0")) as hora_inicio,
-                aula_horario.destaque
+                aula_horario.destaque as horario_destaque,
+                aulas.destaque as aula_destaque
             ')
             ->join('aulas', 'aulas.id = aula_horario.aula_id')
             ->join('disciplinas', 'disciplinas.id = aulas.disciplina_id')
@@ -174,11 +188,20 @@ class Relatorios extends BaseController
             $builder->whereIn('professores.id', $professores);
         }
 
-        return $builder->orderBy('professores.nome')
+        $resultados = $builder->orderBy('professores.nome')
             ->orderBy('tempos_de_aula.dia_semana')
             ->orderBy('tempos_de_aula.hora_inicio')
             ->orderBy('tempos_de_aula.minuto_inicio')
             ->findAll();
+
+        // Marcar como destaque se qualquer um dos campos for 1
+        foreach ($resultados as &$resultado) {
+            $resultado['destaque'] = ($resultado['horario_destaque'] == 1 || $resultado['aula_destaque'] == 1) ? 1 : 0;
+            unset($resultado['horario_destaque']);
+            unset($resultado['aula_destaque']);
+        }
+
+        return $resultados;
     }
 
     protected function filtrarAmbientes()
@@ -188,16 +211,17 @@ class Relatorios extends BaseController
 
         $builder = $this->aulaHorarioModel
             ->select('
-            ambientes.nome as ambiente,
-            cursos.nome as curso,
-            turmas.sigla as turma,
-            disciplinas.nome as disciplina,
-            professores.nome as professor,
-            tempos_de_aula.dia_semana,
-            CONCAT(LPAD(tempos_de_aula.hora_inicio, 2, "0"), ":", LPAD(tempos_de_aula.minuto_inicio, 2, "0")) as hora_inicio,
-            CONCAT(LPAD(tempos_de_aula.hora_fim, 2, "0"), ":", LPAD(tempos_de_aula.minuto_fim, 2, "0")) as hora_fim,
-            aula_horario.destaque
-        ')
+                ambientes.nome as ambiente,
+                cursos.nome as curso,
+                turmas.sigla as turma,
+                disciplinas.nome as disciplina,
+                professores.nome as professor,
+                tempos_de_aula.dia_semana,
+                CONCAT(LPAD(tempos_de_aula.hora_inicio, 2, "0"), ":", LPAD(tempos_de_aula.minuto_inicio, 2, "0")) as hora_inicio,
+                CONCAT(LPAD(tempos_de_aula.hora_fim, 2, "0"), ":", LPAD(tempos_de_aula.minuto_fim, 2, "0")) as hora_fim,
+                aula_horario.destaque as horario_destaque,
+                aulas.destaque as aula_destaque
+            ')
             ->join('aulas', 'aulas.id = aula_horario.aula_id')
             ->join('disciplinas', 'disciplinas.id = aulas.disciplina_id')
             ->join('turmas', 'turmas.id = aulas.turma_id')
@@ -218,11 +242,20 @@ class Relatorios extends BaseController
             $builder->whereIn('ambientes.id', $ambientes);
         }
 
-        return $builder->orderBy('ambientes.nome')
+        $resultados = $builder->orderBy('ambientes.nome')
             ->orderBy('tempos_de_aula.dia_semana')
             ->orderBy('tempos_de_aula.hora_inicio')
             ->orderBy('tempos_de_aula.minuto_inicio')
             ->findAll();
+
+        // Marcar como destaque se qualquer um dos campos for 1
+        foreach ($resultados as &$resultado) {
+            $resultado['destaque'] = ($resultado['horario_destaque'] == 1 || $resultado['aula_destaque'] == 1) ? 1 : 0;
+            unset($resultado['horario_destaque']);
+            unset($resultado['aula_destaque']);
+        }
+
+        return $resultados;
     }
 
     public function exportar()

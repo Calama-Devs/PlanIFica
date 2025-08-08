@@ -43,8 +43,11 @@
 					<button type="button" id="btnGerarVisualizacao" class="btn btn-primary me-2">
 						<i class="mdi mdi-eye-outline me-1"></i>Gerar Visualização
 					</button>
-					<button type="submit" id="btnSubmitExportar" class="btn btn-success">
+					<button type="submit" id="btnSubmitExportar" class="btn btn-success me-2">
 						<i class="mdi mdi-file-export me-1"></i>Exportar PDF
+					</button>
+					<button type="submit" id="btnSubmitExportarXLSX" class="btn btn-success ">
+						<i class="mdi mdi-file-export me-1"></i>Exportar XLSX
 					</button>
 				</div>
 
@@ -461,6 +464,56 @@
 
 			$("#formExportar").submit();
 		});
+
+		$('#btnSubmitExportarXLSX').on('click', function(e) {
+		
+		var form = $('#formExportar');
+		e.preventDefault();
+		var originalAction = form.attr('action');
+
+		var tipo = $('#tipoRelatorio').val();
+		if (!tipo) {
+			$.toast({
+				heading: 'Atenção',
+				text: 'Selecione um tipo de relatório primeiro',
+				showHideTransition: 'slide',
+				icon: 'warning',
+				loaderBg: '#f96868',
+				position: 'top-center'
+			});
+			return;
+		}
+		// Verifica se pelo menos um filtro está preenchido ou se "Todos" está marcado
+		var filtroPreenchido = false;
+		if ( (($('#filtroCurso').val() && $('#filtroCurso').val().length > 0)) ||
+				(($('#filtroTurma').val() && $('#filtroTurma').val().length > 0)) ||
+				(($('#filtroProfessor').val() && $('#filtroProfessor').val().length > 0)) ||
+				(($('#filtroAmbiente').val() && $('#filtroAmbiente').val().length > 0)) ||
+				(($('#filtroGrupoAmbiente').val() && $('#filtroGrupoAmbiente').val().length > 0)) ||
+				$('#checkTodosCursos').is(':checked') ||
+				$('#checkTodasTurmas').is(':checked') ||
+				$('#checkTodosProfessores').is(':checked') ||
+				$('#checkTodosAmbientes').is(':checked') ||
+				$('#checkTodosGruposAmbientes').is(':checked')) {
+			filtroPreenchido = true;
+		}
+
+		if (!filtroPreenchido) {
+			$.toast({
+				heading: 'Atenção',
+				text: 'Selecione pelo menos um filtro para gerar o relatório',
+				showHideTransition: 'slide',
+				icon: 'warning',
+				loaderBg: '#f96868',
+				position: 'top-center'
+			});
+			return;
+		}
+
+		form.attr('action', '<?= base_url('sys/relatorios/exportarXLSX') ?>');
+		form.submit();
+		form.attr('action', originalAction);//volta ao estado inicial do botão
+	});
 
 		$('#btnGerarVisualizacao').on('click', function() {
 			var tipo = $('#tipoRelatorio').val();

@@ -179,6 +179,7 @@ $routes->group('sys', function ($routes)
         $routes->post('getAmbientesByGrupo', 'Relatorios::getAmbientesByGrupo');
         $routes->get('relatorios/gerar', 'Relatorios::gerar');
         $routes->post('exportar', 'Relatorios::exportar');
+        $routes->post('exportarXLSX','Relatorios::exportarXLSX');
     });
     
 });

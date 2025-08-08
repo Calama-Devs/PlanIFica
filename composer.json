@@ -1,5 +1,6 @@
 {
     "require": {
-        "codeigniter4/shield": "^1.1"
+        "codeigniter4/shield": "^1.1",
+        "phpoffice/phpspreadsheet": "^4.5"
     }
 }

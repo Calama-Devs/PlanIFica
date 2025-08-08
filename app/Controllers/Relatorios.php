@@ -1033,4 +1033,84 @@ class Relatorios extends BaseController
 
         return $this->response->setJSON($ambientes);
     }
+    public function exportarXLSX()
+    {
+        $tipo = $this->request->getPost('tipoRelatorio');
+
+        if (!$tipo) {
+            die("Sem tipo selecionado.");
+        }
+
+        $xlsExporter = new \App\Libraries\XLSXExporter();
+        $nomeBase = 'horarios_' . $tipo . '_' . date('Y-m-d');
+        $dadosReestruturados = [];
+        $tituloPrincipal = '';
+        $chavesDaCelula = [];
+        $flatData = [];
+
+        $versoesModel = new \App\Models\VersoesModel();
+        $versaoAtivaId = $versoesModel->getVersaoByUser(auth()->id()) ?? null;
+        $versao = $versaoAtivaId ? $versoesModel->find($versaoAtivaId) : null;
+        $nomeVersao = $versao ? $versao['nome'] : 'Padrão';
+
+        // Busca os dados brutos com base no tipo
+        switch ($tipo) {
+            case 'professor':
+                $flatData = $this->filtrarProfessores();
+                break;
+            case 'curso':
+                $flatData = $this->filtrarCursos();
+                break;
+            case 'ambiente':
+                $flatData = $this->filtrarAmbientes();
+                break;
+        }
+
+        if (empty($flatData)) {
+            return redirect()->back()->with('error', 'Nenhum dado encontrado para exportar com os filtros selecionados.');
+        }
+
+        // Prepara os dados e títulos para cada tipo de relatório
+        switch ($tipo) {
+            case 'professor':
+                $tituloPrincipal = 'Horários por Professor';
+                $chavesDaCelula = ['disciplina', 'turma', 'ambiente'];
+                foreach ($flatData as $item) {
+                    $dadosReestruturados[$item['professor']][$item['dia_semana']][$item['hora_inicio']] = [
+                        'disciplina' => $item['disciplina'],
+                        'turma'      => $item['turma'],
+                        'ambiente'   => $item['ambiente'],
+                    ];
+                }
+                break;
+
+            case 'curso':
+                $tituloPrincipal = 'Horários por Curso e Turma';
+                $chavesDaCelula = ['disciplina', 'professor', 'ambiente'];
+                foreach ($flatData as $item) {
+                    $chaveGrupo = "{$item['curso']} - {$item['turma']}";
+                    $dadosReestruturados[$chaveGrupo][$item['dia_semana']][$item['hora_inicio']] = [
+                        'disciplina' => $item['disciplina'],
+                        'professor'  => $item['professor'],
+                        'ambiente'   => $item['ambiente'],
+                    ];
+                }
+                break;
+
+            case 'ambiente':
+                $tituloPrincipal = 'Horários por Ambiente';
+                $chavesDaCelula = ['disciplina', 'professor', 'turma'];
+                foreach ($flatData as $item) {
+                    $dadosReestruturados[$item['ambiente']][$item['dia_semana']][$item['hora_inicio']] = [
+                        'disciplina' => $item['disciplina'],
+                        'professor'  => $item['professor'],
+                        'turma'      => $item['turma'],
+                    ];
+                }
+                break;
+        }
+
+        // Geração de grade
+        $xlsExporter->generateTimetable($tituloPrincipal, $dadosReestruturados, $chavesDaCelula, $nomeBase,$nomeVersao);
+    }
 }
